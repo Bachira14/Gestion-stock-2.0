@@ -1,0 +1,60 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: gestionstock-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: gestionstock
+      MYSQL_USER: springuser
+      MYSQL_PASSWORD: springpass
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    networks:
+      - gestionnet
+
+  backend:
+    build: ./backend
+    container_name: gestionstock-backend
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/gestionstock?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      SPRING_DATASOURCE_USERNAME: springuser
+      SPRING_DATASOURCE_PASSWORD: springpass
+    ports:
+      - "8080:8080"
+    depends_on:
+      - mysql
+    networks:
+      - gestionnet
+
+  frontend:
+    build: ./frontend
+    container_name: gestionstock-frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    networks:
+      - gestionnet
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: gestionstock-phpmyadmin
+    environment:
+      PMA_HOST: mysql
+      PMA_USER: root
+      PMA_PASSWORD: root123 # Doit correspondre à MYSQL_ROOT_PASSWORD du service mysql
+    ports:
+      - "8081:80"
+    depends_on:
+      - mysql
+    networks:
+      - gestionnet
+
+volumes:
+  mysql-data:
+
+networks:
+  gestionnet:
+    driver: bridge
